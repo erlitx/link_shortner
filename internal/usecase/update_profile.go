@@ -3,8 +3,8 @@ package usecase
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/domain"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/dto"
+	"github.com/erlitx/link_shortner/internal/domain"
+	"github.com/erlitx/link_shortner/internal/dto"
 )
 
 func (u *UseCase) UpdateProfile(input dto.UpdateProfileInput) error {

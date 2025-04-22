@@ -5,16 +5,16 @@ endif
 
 
 DB_MIGRATE_URL=postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB_NAME)?sslmode=disable
-MIGRATE_PATH=./migration/postgres/profile
+MIGRATE_PATH=./migration/postgres/url
 export DB_MIGRATE_URL
 export MIGRATE_PATH
 
-up:
-	docker compose  up --build -d --force-recreate
-	docker compose logs -f
+# up:
+# 	docker compose  up --build -d --force-recreate
+# 	docker compose logs -f
 
-down:
-	docker compose down
+# down:
+# 	docker compose down
 
 run: mod
 	go run ./cmd/app

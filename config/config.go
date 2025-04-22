@@ -5,10 +5,8 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/pkg/httpserver"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/pkg/postgres"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/pkg/wb"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/adapter/kafka"
+	"github.com/erlitx/link_shortner/pkg/httpserver"
+	"github.com/erlitx/link_shortner/pkg/postgres"
 )
 
 type App struct {
@@ -20,8 +18,6 @@ type Config struct {
 	App      App
 	HTTP     httpserver.Config
 	Postgres postgres.Config
-	WB       wb.Config
-	KafkaProducer kafka.Config 
 }
 
 func New() (Config, error) {

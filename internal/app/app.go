@@ -9,59 +9,44 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/config"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/adapter/cache"
-	postgresAdapter "gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/adapter/postgres"
-	wbadapter "gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/adapter/wb"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/controller/http"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/usecase"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/pkg/httpserver"
-	postgresPkg "gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/pkg/postgres"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/pkg/wb"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/adapter/kafka"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/pkg/metrics"
+	"github.com/erlitx/link_shortner/config"
+	"github.com/erlitx/link_shortner/internal/adapter/cache"
+	postgresAdapter "github.com/erlitx/link_shortner/internal/adapter/postgres"
+	"github.com/erlitx/link_shortner/internal/controller/http"
+	"github.com/erlitx/link_shortner/internal/usecase"
+	"github.com/erlitx/link_shortner/pkg/httpserver"
+	postgresPkg "github.com/erlitx/link_shortner/pkg/postgres"
 )
 
 type Dependencies struct {
 	// Adapters
 	Postgres *postgresPkg.Pool
-	WB *wb.Client
-	// KafkaWriter *kafka_writer.Writer
-	// Redis       *redis.Client
 
-	// Controllers
-	// RouterHTTP  *chi.Mux
-	// KafkaReader *kafka_reader.Reader
 }
 
 func Run(ctx context.Context, c config.Config) (err error) {
 	var deps Dependencies
 
-	// Adapters
-	// Postgres
+	// CREATING ADAPTERS
+		// Postgres
 	deps.Postgres, err = postgresPkg.New(ctx, c.Postgres)
 	if err != nil {
 		return fmt.Errorf("postgres.New: %w", err)
 	}
 	defer deps.Postgres.Close()
 
-	entityMetrics := metrics.NewEntity("my-app")
-	kafkaProducer := kafka.NewProducer(c.KafkaProducer, entityMetrics)
-
-	// Cache
+		// Cache
 	cacheAdapter := cache.New()
 	pgPool := postgresAdapter.New(deps.Postgres.Pool)
 
-	// WB Client
-	deps.WB = wb.New(c.WB)
-	wbClient := wbadapter.New(deps.WB)
 
-	uc := usecase.New(cacheAdapter, pgPool, wbClient)
+	// CREATING USECASE
+		//Passing adapters
+	uc := usecase.New(cacheAdapter, pgPool)
 
 	router := chi.NewRouter()
 
 	http.ProfileRouter(router, uc)
-
 	httpServer := httpserver.New(router, "3000")
 	defer httpServer.Close()
 

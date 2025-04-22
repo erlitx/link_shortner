@@ -9,7 +9,7 @@ import (
 )
 
 type Config struct {
-	Port string `envconfig:"HTTP_PORT" default:"8080"`
+	Port string `envconfig:"HTTP_PORT" default:"3000"`
 }
 
 type Server struct {

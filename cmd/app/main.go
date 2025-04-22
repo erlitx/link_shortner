@@ -3,18 +3,15 @@ package main
 import (
 	"context"
 
-	"github.com/pkg/profile"
+	"github.com/erlitx/link_shortner/config"
+	"github.com/erlitx/link_shortner/internal/app"
+	"github.com/erlitx/link_shortner/pkg/logger"
 	"github.com/rs/zerolog/log"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/config"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/app"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/pkg/logger"
 )
 
 func main() {
-	defer profile.Start(profile.TraceProfile, profile.ProfilePath(".")).Stop()
-
 	logger.Init(logger.Config{
-		AppName:       "my-app",
+		AppName:       "LINK-SHORTNER",
 		AppVersion:    "v0.1.0",
 		Level:         "debug",
 		PrettyConsole: true,
@@ -22,12 +19,12 @@ func main() {
 
 	ctx := context.Background()
 
-	c, err := config.New()
+	config, err := config.New()
 	if err != nil {
 		log.Fatal().Err(err).Msg("config.New")
 	}
 
-	err = app.Run(ctx, c)
+	err = app.Run(ctx, config)
 	if err != nil {
 		panic(err)
 	}

@@ -6,10 +6,10 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/rs/zerolog/log"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/domain"
+	"github.com/erlitx/link_shortner/internal/domain"
 )
 
-func (postgres *Postgres) CreateProfile(ctx context.Context, p domain.Profile) (err error) {
+func (postgres *Postgres) CreateShortLink(ctx context.Context, p domain.Profile) (err error) {
 	fmt.Println("Postgres - create profile")
 
 	// Execute the query using the connection pool.

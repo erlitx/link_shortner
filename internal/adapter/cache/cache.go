@@ -2,7 +2,7 @@ package cache
 
 import (
 	"github.com/google/uuid"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/domain"
+	"github.com/erlitx/link_shortner/internal/domain"
 	"sync"
 )
 

@@ -3,7 +3,7 @@ package usecase
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/dto"
+	"github.com/erlitx/link_shortner/internal/dto"
 )
 
 func (u *UseCase) DeleteProfile(input dto.DeleteProfileInput) error {

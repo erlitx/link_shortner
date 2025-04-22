@@ -1,29 +1,35 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
+	"time"
+
 	"github.com/erlitx/link_shortner/internal/dto"
 	"github.com/erlitx/link_shortner/pkg/render"
-	"net/http"
 )
 
-// UpdateProfile обновляет существующий или создаёт новый профиль
-func (h *Handlers) UpdateProfile(w http.ResponseWriter, r *http.Request) {
-	input := dto.UpdateProfileInput{}
+const timeout = time.Second * 5
 
+func (h *Handlers) CreateShortURL(w http.ResponseWriter, r *http.Request) {
+	input := dto.CreateShortUrlInput{Host: r.Host}
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
 		render.Error(w, err, http.StatusBadRequest, "json decode error")
-
 		return
 	}
 
-	err = h.usecase.UpdateProfile(input)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	output, err := h.usecase.CreateShortURL(ctx, input)
+
 	if err != nil {
 		render.Error(w, err, http.StatusBadRequest, "request failed")
-
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	render.JSON(w, output, http.StatusOK)
+
 }

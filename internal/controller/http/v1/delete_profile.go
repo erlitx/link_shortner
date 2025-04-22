@@ -2,8 +2,8 @@ package v1
 
 import (
 	"github.com/go-chi/chi/v5"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/internal/dto"
-	"gitlab.golang-school.ru/potok-1/mbelogortsev/my-app/pkg/render"
+	"github.com/erlitx/link_shortner/internal/dto"
+	"github.com/erlitx/link_shortner/pkg/render"
 	"net/http"
 )
 
