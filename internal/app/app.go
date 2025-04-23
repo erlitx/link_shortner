@@ -36,7 +36,7 @@ func Run(ctx context.Context, c config.Config) (err error) {
 	defer deps.Postgres.Close()
 
 		// Cache
-	cacheAdapter := cache.New()
+	cacheAdapter := cache.New(2)
 	pgPool := postgresAdapter.New(deps.Postgres.Pool)
 
 

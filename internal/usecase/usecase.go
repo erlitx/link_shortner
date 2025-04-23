@@ -4,20 +4,17 @@ import (
 	"context"
 
 	"github.com/erlitx/link_shortner/internal/domain"
-	"github.com/google/uuid"
+	"github.com/erlitx/link_shortner/internal/dto"
 )
 
 type Cache interface {
-	Add(key uuid.UUID, profile domain.Profile)
-	Get(key uuid.UUID) (domain.Profile, error)
-	Update(key uuid.UUID, profile domain.Profile)
-	Delete(key uuid.UUID)
+	Set(url domain.URL)
+	Get(input dto.GetURLInput) (domain.URL, bool)
 }
 
 type Postgres interface {
 	CreateShortURL(ctx context.Context, p domain.URL) error
 	ResolveShortURL(ctx context.Context, short string) (string, error)
-	GetProfile(domain.Profile) error
 }
 
 type UseCase struct {

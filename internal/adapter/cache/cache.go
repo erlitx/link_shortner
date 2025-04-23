@@ -1,51 +1,64 @@
 package cache
 
 import (
-	"github.com/google/uuid"
-	"github.com/erlitx/link_shortner/internal/domain"
+	"container/list"
 	"sync"
+
+	"github.com/erlitx/link_shortner/internal/domain"
+	"github.com/erlitx/link_shortner/internal/dto"
 )
 
 type Cache struct {
-	mx sync.RWMutex
-	m  map[uuid.UUID]domain.Profile
+	capacity int
+	mu       sync.Mutex
+	order    *list.List
+	mx       sync.RWMutex
+	items    map[string]*list.Element
 }
 
-func New() *Cache {
+type entry struct {
+	key   string
+	value domain.URL
+}
+
+func New(capacity int) *Cache {
 	return &Cache{
-		m: make(map[uuid.UUID]domain.Profile),
+		capacity: capacity,
+		order:    list.New(),
+		items:    make(map[string]*list.Element),
 	}
 }
 
-func (c *Cache) Add(key uuid.UUID, profile domain.Profile) {
-	c.mx.Lock()
-	defer c.mx.Unlock()
-
-	c.m[key] = profile
-}
-
-func (c *Cache) Get(key uuid.UUID) (domain.Profile, error) {
-	c.mx.RLock()
-	defer c.mx.RUnlock()
-
-	p, ok := c.m[key]
-	if !ok {
-		return p, domain.ErrNotFound
+func (c *Cache) Set(url domain.URL) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	
+	if el, found := c.items[string(url.ShortURL)]; found {
+		el.Value.(*entry).value = url
+		c.order.MoveToFront(el)
+		return
 	}
 
-	return p, nil
+	if c.order.Len() >= c.capacity {
+		last := c.order.Back()
+		if last != nil {
+			c.order.Remove(last)                     // Remove from list
+			delete(c.items, last.Value.(*entry).key) // Remove from map
+		}
+	}
+
+	e := &entry{key: string(url.ShortURL), value: url}
+	el := c.order.PushFront(e)         // Пушим в лист сразу впереди
+	c.items[string(url.ShortURL)] = el // Записываем в мапу
 }
 
-func (c *Cache) Update(key uuid.UUID, profile domain.Profile) {
-	c.mx.Lock()
-	defer c.mx.Unlock()
-
-	c.m[key] = profile
-}
-
-func (c *Cache) Delete(key uuid.UUID) {
-	c.mx.Lock()
-	defer c.mx.Unlock()
-
-	delete(c.m, key)
+func (c *Cache) Get(input dto.GetURLInput) (domain.URL, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if el, found := c.items[input.ShortUrl]; found {
+		c.order.MoveToFront(el)
+		return el.Value.(*entry).value, true
+	}
+	
+	return domain.URL{}, false
 }

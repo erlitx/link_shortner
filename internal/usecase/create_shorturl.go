@@ -16,9 +16,14 @@ func (u *UseCase) CreateShortURL(ctx context.Context, input dto.CreateShortUrlIn
 	shortUrl := GenerateShortIDFromURL(input.RawURL, 8)
 
 	url, err := domain.NewUrl(input.RawURL, shortUrl)
+
+	u.cache.Set(url)
+	
 	if err != nil {
 		return output, fmt.Errorf("domain.NewUrl: %w", err)
 	}
+
+
 
 	err = u.postgres.CreateShortURL(ctx, url)
 	if err != nil {

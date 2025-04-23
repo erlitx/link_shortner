@@ -9,12 +9,12 @@ MIGRATE_PATH=./migration/postgres/url
 export DB_MIGRATE_URL
 export MIGRATE_PATH
 
-# up:
-# 	docker compose  up --build -d --force-recreate
-# 	docker compose logs -f
+up:
+	docker compose  up --build -d --force-recreate
+	docker compose logs -f
 
-# down:
-# 	docker compose down
+down:
+	docker compose down
 
 run: mod
 	go run ./cmd/app
@@ -26,11 +26,11 @@ mod-update:
 	go get -u all
 	go mod tidy
 
-lint:
-	golangci-lint run
+# lint:
+# 	golangci-lint run
 
-test:
-	go test -v -cover ./...
+# test:
+# 	go test -v -cover ./...
 
 test-coverage:
 	go test -coverprofile=coverage.out ./...
