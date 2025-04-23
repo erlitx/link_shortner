@@ -39,6 +39,18 @@ It provides API endpoints to create and resolve short links, all containerized w
 }
 ```
 ## Start an App
+Provide .env file with following env variables:
+
+```
+POSTGRES_USER
+POSTGRES_PASSWORD
+POSTGRES_PORT
+POSTGRES_HOST
+POSTGRES_DB_NAME
+
+APP_NAME = LINK-SHORTNER
+APP_VERSION = 0.3.0
+```
 
 Use `make` tool to run an app and all other comands.
 
