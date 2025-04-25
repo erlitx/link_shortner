@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+/* test */
+
 type Config struct {
 	Port string `envconfig:"HTTP_PORT" default:"3000"`
 }
