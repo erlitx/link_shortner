@@ -3,10 +3,13 @@ package config
 import (
 	"fmt"
 
-	"github.com/joho/godotenv"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/erlitx/link_shortner/internal/adapter/kafka_producer"
+	"github.com/erlitx/link_shortner/internal/controller/worker"
 	"github.com/erlitx/link_shortner/pkg/httpserver"
 	"github.com/erlitx/link_shortner/pkg/postgres"
+
+	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type App struct {
@@ -15,9 +18,11 @@ type App struct {
 }
 
 type Config struct {
-	App      App
-	HTTP     httpserver.Config
-	Postgres postgres.Config
+	App           App
+	HTTP          httpserver.Config
+	Postgres      postgres.Config
+	KafkaProducer kafka_producer.Config
+	ProduceWorker worker.ProduceConfig
 }
 
 func New() (Config, error) {
