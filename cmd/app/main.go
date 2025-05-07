@@ -26,7 +26,7 @@ func main() {
 
 	err = app.Run(ctx, config)
 	if err != nil {
-		panic(err)
+		log.Fatal().Err(err).Msg("app.Run")
 	}
 
 }

@@ -1,4 +1,3 @@
-version: '3'
 
 services:
   # app:
@@ -16,6 +15,88 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_DB: ${POSTGRES_DB_NAME}
     ports:
       - "${POSTGRES_PORT}:5432"
+
+
+  kafka:
+    image: bitnami/kafka:3.9
+    ports:
+      - '9092:9092' # internal
+      - '9094:9094' # external
+    environment:
+      KAFKA_CFG_NODE_ID: 0
+      KAFKA_CFG_PROCESS_ROLES: 'controller,broker'
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: '0@kafka:9093'
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_CFG_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094'
+      KAFKA_CFG_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094'
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+
+  kafka-init:
+    image: bitnami/kafka:3.9
+    command: |
+      kafka-topics.sh --create --bootstrap-server kafka:9092 --topic qr_code_task --partitions 4
+    depends_on:
+      - kafka
+
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    ports:
+      - '8082:8080'
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+
+  prometheus:
+    image: prom/prometheus:v2.53.4
+    command:
+      - --config.file=/etc/prometheus.yaml
+      - --web.enable-remote-write-receiver
+      - --enable-feature=exemplar-storage
+    volumes:
+      - ./observability/prometheus.yaml:/etc/prometheus.yaml
+    ports:
+      - '9090:9090'
+
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIIO_PASSWORD}
+    command: server /data --console-address ":9001"
+
+  createbucket:
+    image: minio/mc:latest
+    container_name: minio-init
+    depends_on:
+      - minio
+    environment:
+      MINIO_HOST: http://minio:9000
+      MINIO_USER: ${MINIIO_USER}
+      MINIO_PASSWORD: ${MINIIO_PASSWORD}
+      MINIO_BUCKET: ${MINIIO_BUCKET}
+    entrypoint: >
+      /bin/sh -c "
+        echo 'Waiting for MinIO to be ready...';
+        until mc alias set local $${MINIO_HOST} $${MINIO_USER} $${MINIO_PASSWORD}; do
+          sleep 2;
+        done;
+
+        echo 'Creating bucket $${MINIO_BUCKET}...';
+        mc mb --ignore-existing local/$${MINIO_BUCKET};
+
+        echo 'Setting public policy...';
+        mc policy set public local/$${MINIO_BUCKET};
+
+        echo '✅ Bucket setup complete.';
+        exit 0;
+      "

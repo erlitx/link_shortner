@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/rs/zerolog/log"
@@ -11,8 +10,6 @@ import (
 
 
 func (postgres *Postgres) CreateShortURL(ctx context.Context, url domain.URL) (err error) {
-	fmt.Println("Postgres - create profile")
-
 	dialect := goqu.Dialect("postgres")
 	record := goqu.Record{"rawurl": url.RawURL, "shorturl": url.ShortURL}
 

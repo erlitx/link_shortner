@@ -29,14 +29,14 @@ func New(capacity int) *Cache {
 	}
 }
 
-func (c *Cache) Set(url domain.URL) {
+func (c *Cache) Set(url domain.URL) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	
 	if el, found := c.items[string(url.ShortURL)]; found {
 		el.Value.(*entry).value = url
 		c.order.MoveToFront(el)
-		return
+		return nil
 	}
 
 	if c.order.Len() >= c.capacity {
@@ -50,6 +50,7 @@ func (c *Cache) Set(url domain.URL) {
 	e := &entry{key: string(url.ShortURL), value: url}
 	el := c.order.PushFront(e)         // Пушим в лист сразу впереди
 	c.items[string(url.ShortURL)] = el // Записываем в мапу
+	return nil
 }
 
 func (c *Cache) Get(input dto.GetURLInput) (domain.URL, bool) {

@@ -1,6 +1,8 @@
 package http
 
 import (
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/go-chi/chi/v5"
 	ver1 "github.com/erlitx/link_shortner/internal/controller/http/v1"
 	"github.com/erlitx/link_shortner/internal/usecase"
@@ -21,7 +23,7 @@ func RegisterPprofRoutes(r chi.Router) {
 func ProfileRouter(r *chi.Mux, uc *usecase.UseCase) {
 	v1 := ver1.New(uc)
 
-	
+	r.Handle("/metrics", promhttp.Handler())
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/v1", func(r chi.Router) {
 			r.Post("/create_shortlink", v1.CreateShortURL)
