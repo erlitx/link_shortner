@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/erlitx/link_shortner/internal/adapter/kafka_producer"
+	minioadapter "github.com/erlitx/link_shortner/internal/adapter/miniio"
+	"github.com/erlitx/link_shortner/internal/controller/kafka_consumer"
 	"github.com/erlitx/link_shortner/internal/controller/worker"
 	"github.com/erlitx/link_shortner/pkg/httpserver"
 	"github.com/erlitx/link_shortner/pkg/postgres"
@@ -22,7 +24,9 @@ type Config struct {
 	HTTP          httpserver.Config
 	Postgres      postgres.Config
 	KafkaProducer kafka_producer.Config
+	KafkaConsumer kafka_consumer.Config
 	ProduceWorker worker.ProduceConfig
+	MiniIo        minioadapter.Config
 }
 
 func New() (Config, error) {

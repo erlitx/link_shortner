@@ -10,14 +10,19 @@ import (
 	"github.com/erlitx/link_shortner/config"
 	"github.com/erlitx/link_shortner/internal/adapter/cache"
 	"github.com/erlitx/link_shortner/internal/adapter/kafka_producer"
+	"github.com/erlitx/link_shortner/internal/controller/kafka_consumer"
 	postgresAdapter "github.com/erlitx/link_shortner/internal/adapter/postgres"
+	"github.com/erlitx/link_shortner/internal/adapter/miniio"
+
 	"github.com/erlitx/link_shortner/internal/controller/http"
-	"github.com/erlitx/link_shortner/internal/controller/worker"
+	//"github.com/erlitx/link_shortner/internal/controller/worker"
 	"github.com/erlitx/link_shortner/internal/usecase"
 	"github.com/erlitx/link_shortner/pkg/httpserver"
 	postgresPkg "github.com/erlitx/link_shortner/pkg/postgres"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
+
+	"github.com/erlitx/link_shortner/pkg/metrics"
 )
 
 type Dependencies struct {
@@ -28,6 +33,8 @@ type Dependencies struct {
 
 func Run(ctx context.Context, c config.Config) (err error) {
 	var deps Dependencies
+
+	entityMetrics := metrics.NewEntity("url_shortner")
 
 	// CREATING ADAPTERS
 	// 1. Postgres
@@ -42,11 +49,21 @@ func Run(ctx context.Context, c config.Config) (err error) {
 	pgPool := postgresAdapter.New(deps.Postgres.Pool)
 
 	// 3. Kafka Producer
-	kafkaProducer := kafka_producer.NewProducer(c.KafkaProducer)
+	kafkaProducer := kafka_producer.NewProducer(c.KafkaProducer, entityMetrics)
+
+	// MINIIO
+	minioClient, err := minioadapter.New(c.MiniIo)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to init MinIO")
+	}
+
 
 	// USECASE
 	//Passing adapters
-	uc := usecase.New(cacheAdapter, pgPool, kafkaProducer)
+	uc := usecase.New(cacheAdapter, pgPool, kafkaProducer, minioClient)
+
+	// 4. Kafka consumer
+	kafkaConsumer := kafka_consumer.New(c.KafkaConsumer, entityMetrics, uc)
 
 	// HTTP
 	router := chi.NewRouter()
@@ -54,9 +71,9 @@ func Run(ctx context.Context, c config.Config) (err error) {
 	httpServer := httpserver.New(router, "3000")
 
 	// Produce worker
-	produceWorker := worker.NewProduceWorker(c.ProduceWorker, uc)
+	// produceWorker := worker.NewProduceWorker(c.ProduceWorker, uc)
 
-	log.Info().Msg("App started!")
+	// log.Info().Msg("App started!")
 
 	// STOPPING
 	sig := make(chan os.Signal, 1)
@@ -66,9 +83,9 @@ func Run(ctx context.Context, c config.Config) (err error) {
 	log.Info().Msg("App got signal to stop")
 
 	// Contollers
-	//kafkaConsumer.Close()
+	kafkaConsumer.Close()
 	httpServer.Close()
-	produceWorker.Stop()
+	//produceWorker.Stop()
 
 	// Adapters
 	kafkaProducer.Close()

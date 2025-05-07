@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"hash/fnv"
+	"time"
 
 	"github.com/erlitx/link_shortner/pkg/logger"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
+
+	"github.com/erlitx/link_shortner/pkg/metrics"
 )
 
 type Config struct {
@@ -16,10 +19,11 @@ type Config struct {
 }
 
 type Producer struct {
-	writer *kafka.Writer
+	writer  *kafka.Writer
+	metrics *metrics.Entity
 }
 
-func NewProducer(c Config) *Producer {
+func NewProducer(c Config, metrics *metrics.Entity) *Producer {
 	w := &kafka.Writer{
 		Addr:         kafka.TCP(c.Addr...),
 		Topic:        c.Topic,
@@ -30,23 +34,24 @@ func NewProducer(c Config) *Producer {
 	}
 
 	return &Producer{
-		writer: w,
+		writer:  w,
+		metrics: metrics,
 	}
 }
 
 func (p *Producer) Produce(ctx context.Context, msgs ...kafka.Message) error {
 	const produce = "produce"
 
-	//defer p.metrics.Duration(produce, time.Now())
+	defer p.metrics.Duration(produce, time.Now())
 
 	err := p.writer.WriteMessages(ctx, msgs...)
 	if err != nil {
-		//p.metrics.TotalAdd(produce, metrics.Error, len(msgs))
+		p.metrics.TotalAdd(produce, metrics.Error, len(msgs))
 
 		return fmt.Errorf("p.writer.WriteMessages: %w", err)
 	}
 
-	//p.metrics.TotalAdd(produce, metrics.Ok, len(msgs))
+	p.metrics.TotalAdd(produce, metrics.Ok, len(msgs))
 
 	return nil
 }

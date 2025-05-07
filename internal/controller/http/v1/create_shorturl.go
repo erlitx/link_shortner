@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"encoding/json"
+
 	"net/http"
 	"time"
 
@@ -24,7 +25,6 @@ func (h *Handlers) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	output, err := h.usecase.CreateShortURL(ctx, input)
-
 	if err != nil {
 		render.Error(w, err, http.StatusBadRequest, "request failed")
 		return

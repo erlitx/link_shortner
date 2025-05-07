@@ -8,6 +8,7 @@ import (
 
 	"github.com/erlitx/link_shortner/internal/domain"
 	"github.com/erlitx/link_shortner/internal/dto"
+	"github.com/rs/zerolog/log"
 )
 
 func (u *UseCase) CreateShortURL(ctx context.Context, input dto.CreateShortUrlInput) (dto.CreateShortUrlOutput, error) {
@@ -18,21 +19,26 @@ func (u *UseCase) CreateShortURL(ctx context.Context, input dto.CreateShortUrlIn
 	url, err := domain.NewUrl(input.RawURL, shortUrl)
 
 	u.cache.Set(url)
-	
+
 	if err != nil {
 		return output, fmt.Errorf("domain.NewUrl: %w", err)
 	}
-
-
 
 	err = u.postgres.CreateShortURL(ctx, url)
 	if err != nil {
 		return output, fmt.Errorf("u.postgres.CreateURL: %w", err)
 	}
 	output = dto.CreateShortUrlOutput{input.Host + "/" + string(url.ShortURL)}
+
+	//Generate QR code
+	go func() {
+		err := u.SendShortURLtoKafka(string(output.ShortURL))
+		if err != nil {
+			log.Error().Err(err).Msg("kafka producer: failed to send message")
+		}
+	}()
 	return output, nil
 }
-
 
 func GenerateShortIDFromURL(input string, length int) string {
 	hasher := sha1.New()

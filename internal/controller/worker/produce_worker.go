@@ -45,7 +45,7 @@ func (w *ProduceWorker) run() {
 
 FOR:
 	for {
-		err := w.usecase.Produce(context.Background(), w.config.MessageCount)
+		err := w.usecase.TestProduce(context.Background(), w.config.MessageCount)
 		if err != nil {
 			log.Error().Err(err).Msg("produce worker: some work failed")
 		}

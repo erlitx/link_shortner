@@ -23,16 +23,22 @@ type KafkaProducer interface {
 	Produce(ctx context.Context, msgs ...kafka.Message) error
 }
 
+type Storage interface {
+	SaveFile(ctx context.Context, key string, data []byte) error 
+}
+
 type UseCase struct {
 	cache          Cache
 	postgres       Postgres
 	kafka_producer KafkaProducer
+	storage        Storage
 }
 
-func New(cache Cache, p Postgres, kafProd KafkaProducer) *UseCase {
+func New(cache Cache, p Postgres, kafProd KafkaProducer, s Storage) *UseCase {
 	return &UseCase{
 		cache:    cache,
 		postgres: p,
 		kafka_producer: kafProd,
+		storage: s,
 	}
 }

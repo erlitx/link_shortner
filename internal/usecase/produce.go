@@ -9,7 +9,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func (u *UseCase) Produce(ctx context.Context, msgCount int) error {
+func (u *UseCase) TestProduce(ctx context.Context, msgCount int) error {
 	msgs := make([]domain.Message, 0, msgCount)
 
 	for range msgCount {
